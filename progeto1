@@ -1,0 +1,41 @@
+pip install requests
+
+pip install beautifulsoup4
+
+import requests
+from bs4 import BeautifulSoup
+
+def main():
+    base_url = "https://pt.wikipedia.org"
+    starting_page = "/wiki/Python"
+
+    visited_pages = set()
+    crawl_page(base_url, starting_page, visited_pages)
+
+def crawl_page(base_url, url, visited_pages):
+    full_url = base_url + url
+
+    if full_url in visited_pages:
+        return
+
+    visited_pages.add(full_url)
+
+    response = requests.get(full_url)
+    if response.status_code != 200:
+        print(f"Erro ao acessar {full_url}")
+        return
+
+    soup = BeautifulSoup(response.content, "html.parser")
+
+    title = soup.find("h1", {"id": "firstHeading"}).text
+    print(f"Página principal: {title}")
+
+    links = soup.find_all("a", href=True)
+    for link in links:
+        link_url = link["href"]
+        if link_url.startswith("/wiki/") and ":" not in link_url:
+            print(f"Página secundária: {link.text}")
+            crawl_page(base_url, link_url, visited_pages)
+
+if __name__ == "__main__":
+    main()
